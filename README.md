@@ -35,9 +35,205 @@ STEP-5: Display the obtained cipher text.
 
 
 Program:
+```
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+
+char keyTable[5][5];
+
+void generateKeyTable(char key[]) {
+    int used[26] = {0};
+    int i, k = 0;
+
+    for (i = 0; key[i] != '\0'; i++) {
+        char ch = tolower(key[i]);
+
+        if (ch == 'j')
+            ch = 'i';
+
+        if (ch >= 'a' && ch <= 'z' && !used[ch - 'a']) {
+            keyTable[k / 5][k % 5] = ch;
+            used[ch - 'a'] = 1;
+            k++;
+        }
+    }
+
+    for (i = 0; i < 26; i++) {
+        if (i + 'a' == 'j')
+            continue;
+
+        if (!used[i]) {
+            keyTable[k / 5][k % 5] = i + 'a';
+            k++;
+        }
+    }
+}
+
+void findPosition(char ch, int *row, int *col) {
+    int i, j;
+
+    if (ch == 'j')
+        ch = 'i';
+
+    for (i = 0; i < 5; i++) {
+        for (j = 0; j < 5; j++) {
+            if (keyTable[i][j] == ch) {
+                *row = i;
+                *col = j;
+                return;
+            }
+        }
+    }
+}
+
+void encrypt(char text[]) {
+    int i, r1, c1, r2, c2;
+    char a, b;
+
+    for (i = 0; i < strlen(text); i += 2) {
+        a = text[i];
+        b = text[i + 1];
+
+        findPosition(a, &r1, &c1);
+        findPosition(b, &r2, &c2);
+
+        if (r1 == r2) {
+            printf("%c%c",
+                   keyTable[r1][(c1 + 1) % 5],
+                   keyTable[r2][(c2 + 1) % 5]);
+        }
+        else if (c1 == c2) {
+            printf("%c%c",
+                   keyTable[(r1 + 1) % 5][c1],
+                   keyTable[(r2 + 1) % 5][c2]);
+        }
+        else {
+            printf("%c%c",
+                   keyTable[r1][c2],
+                   keyTable[r2][c1]);
+        }
+    }
+}
+
+void decrypt(char text[]) {
+    int i, r1, c1, r2, c2;
+    char a, b;
+
+    for (i = 0; i < strlen(text); i += 2) {
+        a = text[i];
+        b = text[i + 1];
+
+        findPosition(a, &r1, &c1);
+        findPosition(b, &r2, &c2);
+
+        if (r1 == r2) {
+            printf("%c%c",
+                   keyTable[r1][(c1 + 4) % 5],
+                   keyTable[r2][(c2 + 4) % 5]);
+        }
+        else if (c1 == c2) {
+            printf("%c%c",
+                   keyTable[(r1 + 4) % 5][c1],
+                   keyTable[(r2 + 4) % 5][c2]);
+        }
+        else {
+            printf("%c%c",
+                   keyTable[r1][c2],
+                   keyTable[r2][c1]);
+        }
+    }
+}
+
+int main() {
+    char key[50], text[100];
+    char processed[100];
+    char cipher[100];
+    int i, j = 0;
+
+    printf("Enter the keyword: ");
+    scanf("%s", key);
+
+    printf("Enter the plaintext: ");
+    scanf("%s", text);
+
+    // Convert to lowercase and replace j with i
+    for (i = 0; i < strlen(text); i++) {
+        text[i] = tolower(text[i]);
+
+        if (text[i] == 'j')
+            text[i] = 'i';
+    }
+
+    // Prepare plaintext
+    for (i = 0; i < strlen(text); i++) {
+        processed[j++] = text[i];
+
+        if (text[i] == text[i + 1]) {
+            processed[j++] = 'x';
+        }
+    }
+
+    // Add padding if needed
+    if (j % 2 != 0) {
+        processed[j++] = 'z';
+    }
+
+    processed[j] = '\0';
+
+    generateKeyTable(key);
+
+    // Display key matrix
+    printf("\nKey Matrix:\n");
+
+    for (i = 0; i < 5; i++) {
+        for (j = 0; j < 5; j++) {
+            printf("%c ", keyTable[i][j]);
+        }
+        printf("\n");
+    }
+
+    // Encryption
+    printf("\nCipher Text: ");
+
+    j = 0;
+
+    for (i = 0; i < strlen(processed); i += 2) {
+        int r1, c1, r2, c2;
+
+        findPosition(processed[i], &r1, &c1);
+        findPosition(processed[i + 1], &r2, &c2);
+
+        if (r1 == r2) {
+            cipher[j++] = keyTable[r1][(c1 + 1) % 5];
+            cipher[j++] = keyTable[r2][(c2 + 1) % 5];
+        }
+        else if (c1 == c2) {
+            cipher[j++] = keyTable[(r1 + 1) % 5][c1];
+            cipher[j++] = keyTable[(r2 + 1) % 5][c2];
+        }
+        else {
+            cipher[j++] = keyTable[r1][c2];
+            cipher[j++] = keyTable[r2][c1];
+        }
+    }
+
+    cipher[j] = '\0';
+
+    printf("%s", cipher);
+
+    // Decryption
+    printf("\nDecrypted Text: ");
+    decrypt(cipher);
+
+    return 0;
+}
+```
 
 
 
 
 
 Output:
+<br>
+<img width="324" height="366" alt="image" src="https://github.com/user-attachments/assets/f986d3e7-9eff-4444-b9dd-52a9838e1ac5" />
